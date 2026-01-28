@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI: Aging Intelligently</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            padding: 20px 60px;
+            font-size: 32px;
+        }
+
+        .btn-back {
+            background-color: black;
+            color: white;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 15px 40px;
+            font-size: 28px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            background-color: black;
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background-color: black;
+            padding: 30px 40px;
+            border-radius: 20px;
+        }
+
+        .input-label {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ecf0f1;
+        }
+
+        .name-input {
+            padding: 20px 30px;
+            border: 3px solid #3498db;
+            border-radius: 20px;
+            background-color: black;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            width: 500px;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #2ecc71;
+        }
+
+        .name-input::placeholder {
+            color: #7f8c8d;
+        }
+
+        .cursor-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .cursor-btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid #34495e;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .cursor-btn:hover {
+            border-width: 6px;
+            border-color: #e74c3c;
+            transform: scale(1.05);
+        }
+
+        .cursor-btn.selected {
+            border-color: #2ecc71;
+            border-width: 6px;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            padding: 40px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .level-btn {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 42px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .level-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .menu-header {
+            background-color: #274e13;
+            color: white;
+            font-size: 56px;
+            font-weight: bold;
+            text-align: center;
+            padding: 30px;
+            width: 100%;
+        }
+
+        .game-level {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Main Menu Screen
+        function MainMenuScreen({ onNext }) {
+            return (
+                <div className="screen" style={{
+                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                }}>
+                    <div className="title" style={{ fontSize: '72px', lineHeight: '1.4' }}>
+                        Welcome to<br/>AI: Aging Intelligently
+                    </div>
+                    <button className="btn btn-next" onClick={onNext}>
+                        Next
+                    </button>
+                </div>
+            );
+        }
+
+        // Name Entry Screen
+        function NameScreen({ onNext, onBack }) {
+            const [name, setName] = useState('');
+
+            const handleSubmit = () => {
+                if (name.trim()) {
+                    onNext(name.trim());
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    handleSubmit();
+                }
+            };
+
+            return (
+                <div className="screen" style={{
+                    background: 'linear-gradient(135deg, #134e4a 0%, #0f766e 100%)',
+                }}>
+                    <button className="btn btn-back" onClick={onBack}>
+                        Back
+                    </button>
+
+                    <div className="title" style={{ maxWidth: '90%' }}>
+                        Please enter your name to begin your adventure!
+                    </div>
+
+                    <div className="input-container">
+                        <label className="input-label">Name:</label>
+                        <input
+                            type="text"
+                            className="name-input"
+                            placeholder="Enter your name here..."
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            autoFocus
+                        />
+                    </div>
+
+                    <button
+                        className="btn btn-next"
+                        onClick={handleSubmit}
+                        disabled={!name.trim()}
+                    >
+                        Next
+                    </button>
+                </div>
+            );
+        }
+
+        // Cursor Selection Screen
+        function CursorSelectionScreen({ playerName, onNext }) {
+            const [selectedCursor, setSelectedCursor] = useState(null);
+
+            const cursors = [
+                { emoji: '👆', color: '#FF6B6B' },
+                { emoji: '👉', color: '#4ECDC4' },
+                { emoji: '☝️', color: '#FFE66D' },
+                { emoji: '🖐️', color: '#95E1D3' },
+                { emoji: '✋', color: '#3498DB' },
+                { emoji: '👍', color: '#E9C9C4' }
+            ];
+
+            return (
+                <div className="screen" style={{ backgroundColor: '#2c3e50' }}>
+                    <div className="title" style={{ marginTop: '40px' }}>
+                        Choose Your Cursor, {playerName}!
+                    </div>
+
+                    <div className="cursor-grid">
+                        {cursors.map((cursor, index) => (
+                            <button
+                                key={index}
+                                className={`cursor-btn ${selectedCursor === index ? 'selected' : ''}`}
+                                style={{ backgroundColor: cursor.color }}
+                                onClick={() => setSelectedCursor(index)}
+                            >
+                                {cursor.emoji}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        className="btn"
+                        style={{
+                            backgroundColor: selectedCursor !== null ? '#27ae60' : '#95a5a6',
+                            color: 'white',
+                            fontSize: '28px',
+                            padding: '20px 50px',
+                            marginTop: '20px'
+                        }}
+                        onClick={() => onNext(cursors[selectedCursor])}
+                        disabled={selectedCursor === null}
+                    >
+                        Next
+                    </button>
+                </div>
+            );
+        }
+
+        // Game Menu Screen
+        function GameMenuScreen({ playerName, cursor, onLevelSelect }) {
+            const levels = [
+                { number: 1, color: '#3498db' },
+                { number: 2, color: '#6aa84f' },
+                { number: 3, color: '#e74c3c' },
+                { number: 4, color: '#e73c82' },
+                { number: 5, color: '#a13ce7' },
+                { number: 6, color: '#e7a13c' },
+                { number: 7, color: '#3d6d61' },
+                { number: 8, color: '#22299d' }
+            ];
+
+            return (
+                <div className="screen" style={{ backgroundColor: '#1a1a1a' }}>
+                    <div className="menu-header">
+                        Pick your level to start
+                    </div>
+
+                    <div className="level-grid">
+                        {levels.map((level) => (
+                            <button
+                                key={level.number}
+                                className="level-btn"
+                                style={{ backgroundColor: level.color }}
+                                onClick={() => onLevelSelect(level.number)}
+                            >
+                                Level {level.number}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Game Level Screen (Placeholder)
+        function GameLevelScreen({ level, playerName, onBack }) {
+            return (
+                <div className="game-level">
+                    <button className="btn btn-back" onClick={onBack}>
+                        Back to Menu
+                    </button>
+
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '72px', marginBottom: '30px' }}>
+                            Level {level}
+                        </div>
+                        <div style={{ fontSize: '36px', marginBottom: '20px' }}>
+                            Welcome, {playerName}!
+                        </div>
+                        <div style={{ fontSize: '24px', opacity: 0.9 }}>
+                            Game level content goes here
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [screen, setScreen] = useState('main-menu');
+            const [playerName, setPlayerName] = useState('');
+            const [selectedCursor, setSelectedCursor] = useState(null);
+            const [currentLevel, setCurrentLevel] = useState(null);
+
+            const handleNameSubmit = (name) => {
+                setPlayerName(name);
+                setScreen('cursor-selection');
+            };
+
+            const handleCursorSelect = (cursor) => {
+                setSelectedCursor(cursor);
+                setScreen('game-menu');
+            };
+
+            const handleLevelSelect = (level) => {
+                setCurrentLevel(level);
+                setScreen('game-level');
+            };
+
+            const handleBackToMenu = () => {
+                setScreen('game-menu');
+                setCurrentLevel(null);
+            };
+
+            switch (screen) {
+                case 'main-menu':
+                    return <MainMenuScreen onNext={() => setScreen('name-entry')} />;
+
+                case 'name-entry':
+                    return (
+                        <NameScreen
+                            onNext={handleNameSubmit}
+                            onBack={() => setScreen('main-menu')}
+                        />
+                    );
+
+                case 'cursor-selection':
+                    return (
+                        <CursorSelectionScreen
+                            playerName={playerName}
+                            onNext={handleCursorSelect}
+                        />
+                    );
+
+                case 'game-menu':
+                    return (
+                        <GameMenuScreen
+                            playerName={playerName}
+                            cursor={selectedCursor}
+                            onLevelSelect={handleLevelSelect}
+                        />
+                    );
+
+                case 'game-level':
+                    return (
+                        <GameLevelScreen
+                            level={currentLevel}
+                            playerName={playerName}
+                            onBack={handleBackToMenu}
+                        />
+                    );
+
+                default:
+                    return <MainMenuScreen onNext={() => setScreen('name-entry')} />;
+            }
+        }
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
